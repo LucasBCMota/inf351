@@ -23,12 +23,10 @@ void loop() {
     else if (command == "-")
       frequency *= 2;
     else if (command.startsWith("I")) {
-      Serial.println(command);
       command = command.substring(2);
       frequency = command.toFloat();
     }
     else if (command.startsWith("R")) {
-      Serial.println(command);
       command = command.substring(2);
       ticks = command.toInt() + 1;
       ticking = true;            
