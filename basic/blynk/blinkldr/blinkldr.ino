@@ -128,8 +128,10 @@ void loop()
     else{
       blinking = 1;
     }
-   else
+   else{
       blinking = 1;
+      Blynk.virtualWrite(V3, 1);
+   }
   if((currentTime-previousTime)>=interval && blinking>0){
     if(count>0 && ledState == HIGH)
       count = count-1;
