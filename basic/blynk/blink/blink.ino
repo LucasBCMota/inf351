@@ -75,6 +75,7 @@ void setup()
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   Blynk.begin(auth, ssid, pass, IPAddress(139,59,206,133), 8080);
+  Blynk.virtualWrite(V3, 1);
 }
 
 void loop()
