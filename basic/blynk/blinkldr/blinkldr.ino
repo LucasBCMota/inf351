@@ -86,12 +86,16 @@ BLYNK_WRITE(V7)
   int pinValue = param.asInt();
     if(pinValue == 1)
       control = true;
+    else
+      control = false;
 }
 BLYNK_WRITE(V6)
 {
   int pinValue = param.asInt();
   if(pinValue == 1)
     night = true;
+  else
+    night = false;
 }
 void setup()
 {
