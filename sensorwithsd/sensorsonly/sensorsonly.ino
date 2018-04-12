@@ -4,6 +4,8 @@
 #include "DHT.h"
 #include <Ultrasonic.h>
 #define DHTPIN 2     // what digital pin we're connected to
+#define trigger_pin 6
+#define echo_pin = 7
 
 // Uncomment whatever type you're using!
 //#define DHTTYPE DHT11   // DHT 11
@@ -22,7 +24,7 @@
 // tweak the timings for faster processors.  This parameter is no longer needed
 // as the current DHT reading algorithm adjusts itself to work on faster procs.
 DHT dht(DHTPIN, DHTTYPE);
-Ultrasonic ultrasonic(12, 13);
+Ultrasonic ultrasonic(trigger_pin, echo_pin);
 
 int sensorPin = A0;
 int sensorValue = 0;

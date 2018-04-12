@@ -5,6 +5,8 @@
 #include <Ultrasonic.h>
 #define DHTPIN 2     // what digital pin we're connected to
 #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
+#define pino_echo 7
+#define pino_trigger 6
 #include <SPI.h>
 #include <SD.h>
 
@@ -22,7 +24,7 @@ File configuracao;
 
 
 DHT dht(DHTPIN, DHTTYPE);
-Ultrasonic ultrasonic(12, 13);
+Ultrasonic ultrasonic(pino_trigger, pino_echo);
 
 int sensorPin = A0;
 int sensorValue = 0;
@@ -57,22 +59,17 @@ void setup() {
   } else {
     Serial.println("Arquivo de configuração nao encontrado, usando valores default");
   }
-  nome = "Leitura ";
   nome.concat(dia);
   nome.concat("-");
   nome.concat(mes);
   nome.concat("-");
-  nome.concat(ano);
+  nome.concat(ano%2000);
   nome.concat(".csv");
   arquivo = SD.open(nome, FILE_WRITE);
-  arquivo.write("Leituras dos sensores DHT22, Ultrasonic e LDR\n");
-  arquivo.write("No dia");
-  arquivo.write(dia);
-  arquivo.write("/");
-  arquivo.write(mes);
-  arquivo.write("/");
-  arquivo.write(ano);
-  arquivo.write("\n");
+  if (arquivo)
+    arquivo.println("Leituras dos sensores DHT22, Ultrasonic e LDR;");
+  else
+    Serial.println("Problemas ao criar arquivo");
   arquivo.close();
 }
 
@@ -108,21 +105,23 @@ void loop() {
     deltaHoras = deltaHoras-24;
   }
   arquivo = SD.open(nome, FILE_WRITE);
-  arquivo.write(dia+deltaDias);
+  arquivo.write(String(dia+deltaDias).c_str());
   arquivo.write("/");
-  arquivo.write(mes);
+  arquivo.write(String(mes).c_str());
   arquivo.write("/");
-  arquivo.write(ano);
-  arquivo.write("\n");
-  arquivo.write(hora+deltaHoras);
+  arquivo.write(String(ano).c_str());
+  arquivo.write(";");
+  arquivo.println();
+  arquivo.write(String(hora+deltaHoras).c_str());
   arquivo.write(":");
-  arquivo.write(minuto+deltaMinutos);
-  arquivo.write("  ");
-  arquivo.write(t);
-  arquivo.write(" *C  ");
-  arquivo.write(ultrasonic.distanceRead());
-  arquivo.write("cm  ");
-  arquivo.write(sensorValue);
-  arquivo.write("\n");
+  arquivo.write(String(minuto+deltaMinutos).c_str());
+  arquivo.write(";");
+  arquivo.write(String(t).c_str());
+  arquivo.write("*C;");
+  arquivo.write(String(ultrasonic.distanceRead()).c_str());
+  arquivo.write("cm;");
+  arquivo.write(String(sensorValue).c_str());
+  arquivo.write(';');
+  arquivo.println();
   arquivo.close();
 }
