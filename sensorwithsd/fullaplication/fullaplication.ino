@@ -1,10 +1,7 @@
-// Example testing sketch for various DHT humidity/temperature sensors
-// Written by ladyada, public domain
-
 #include "DHT.h"
 #include <Ultrasonic.h>
-#define DHTPIN 2     // what digital pin we're connected to
-#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
+#define DHTPIN 2 
+#define DHTTYPE DHT22 
 #define pino_echo 7
 #define pino_trigger 6
 #include <SPI.h>
@@ -36,16 +33,13 @@ File arquivo;
 void setup() {
   Serial.begin(9600);
   dht.begin();
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
-  Serial.print("Initializing SD card...");
+  Serial.print("Inicializando cartão SD");
 
   if (!SD.begin(4)) {
-    Serial.println("initialization failed!");
+    Serial.println("A inicialização falhou!");
     return;
   }
-  Serial.println("initialization done.");
+  Serial.println("Inicialização concluída.");
   if (SD.exists("config.txt")) {
     configuracao = SD.open("config.txt");
     dia = (configuracao.readStringUntil('\n')).toInt();
@@ -74,18 +68,14 @@ void setup() {
 }
 
 void loop() {
-  // Wait a few seconds between measurements.
   delay(intervalo);
   sensorValue = analogRead(sensorPin);
-  // Reading temperature or humidity takes about 250 milliseconds!
-  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
   float h = dht.readHumidity();
   // Read temperature as Celsius (the default)
   float t = dht.readTemperature();
   // Read temperature as Fahrenheit (isFahrenheit = true)
   float f = dht.readTemperature(true);
-
-  // Check if any reads failed and exit early (to try again).
+  
   if (isnan(h) || isnan(t) || isnan(f)) {
     Serial.println("Failed to read from DHT sensor!");
     return;
