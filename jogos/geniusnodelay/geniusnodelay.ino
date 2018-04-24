@@ -35,12 +35,11 @@ const int GREEN = 4;
 const int BLUE = 0;
 WiFiClient espClient;
 PubSubClient client(espClient);
-;
 char msg[50];
 String colorList;
 int interval = 1000;
 int previousTime = 0;
-int rounds = 0, colorIndex = 0;
+int rounds = 0, colorIndex = 0, totalColors = 5;
 bool playing = true, ledState = false;
 
 void setup_wifi() {
@@ -75,17 +74,22 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if (strcmp(topic, "reset") == 0) {
     if (playing)
       playing = false;
-    else{
+    else {
       playing = true;
     }
   }
   if (strcmp(topic, "cor") == 0) {
-    int cor = colorList[colorIndex]-'0';
-    if(num == cor){
+    int cor = colorList[colorIndex] - '0';
+    if (num == cor) {
+      ledColor(cor);
+      delay(1000);
+      ledColor(0);
       colorIndex++;
-      if(colorIndex >= colorList.length())
-        colorIndex = 0;
+      if (colorIndex >= colorList.length())
+        startNewRound();
     }
+    else
+      resetGame();
   }
 }
 
@@ -110,28 +114,40 @@ void reconnect() {
     }
   }
 }
-void ledColor(int color){
-  if(color == 0){
+void startNewRound() {
+  colorIndex = 0;
+  rounds++;
+  colorList = colorList+ random(totalColors-1);
+  playing = true;
+}
+void resetGame() {
+  colorIndex = 0;
+  rounds = 0;
+  playing = true;
+  colorList = "";
+}
+void ledColor(int color) {
+  if (color == 0) {
     analogWrite(RED, 0);
     analogWrite(GREEN, 0);
-    analogWrite(BLUE, 0); 
-  }else if(color == 1){
+    analogWrite(BLUE, 0);
+  } else if (color == 1) {
     analogWrite(RED, 200);
     analogWrite(GREEN, 0);
-    analogWrite(BLUE, 0); 
-  }else if(color == 2){
+    analogWrite(BLUE, 0);
+  } else if (color == 2) {
     analogWrite(RED, 0);
     analogWrite(GREEN, 200);
-    analogWrite(BLUE, 0); 
-  }else if(color == 3){
+    analogWrite(BLUE, 0);
+  } else if (color == 3) {
     analogWrite(RED, 0);
     analogWrite(GREEN, 0);
     analogWrite(BLUE, 200);
-  }else if(color == 4){
+  } else if (color == 4) {
     analogWrite(RED, 200);
     analogWrite(GREEN, 25);
-    analogWrite(BLUE, 0); 
-  }  
+    analogWrite(BLUE, 0);
+  }
 }
 void setup() {
   pinMode(RED, OUTPUT);
@@ -141,11 +157,11 @@ void setup() {
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  colorList = ""+random(1,5);
+  colorList = "" + random(1, 5);
 }
 
 void loop() {
-  
+
   if (!client.connected()) {
     reconnect();
   }
@@ -153,21 +169,13 @@ void loop() {
   long now = millis();
   if (now - previousTime > interval && playing) {
     previousTime = now;
-    if(ledState){
-      ledColor(colorList[colorIndex]-'0');
+    if (ledState) {
+      ledColor(colorList[colorIndex] - '0');
       ledState = false;
       colorIndex++;
-    }else{
+    } else {
       ledState = true;
       ledColor(0);
-      if(colorIndex >= colorList.length()){
-        playing = false;
-        colorIndex = 0;
-      }
     }
-  }else if(!playing){
-    previousTime = now;
-    ledColor(0);
-    ledState = true;
   }
 }
