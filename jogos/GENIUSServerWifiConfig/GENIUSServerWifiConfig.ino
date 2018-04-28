@@ -1,65 +1,90 @@
-/*
-  Basic ESP8266 MQTT example
-
-  This sketch demonstrates the capabilities of the pubsub library in combination
-  with the ESP8266 board/library.
-
-  It connects to an MQTT server then:
-  - publishes "hello world" to the topic "outTopic" every two seconds
-  - subscribes to the topic "inTopic", printing out any messages
-    it receives. NB - it assumes the received payloads are strings not binary
-  - If the first character of the topic "inTopic" is an 1, switch ON the ESP Led,
-    else switch it off
-
-  It will reconnect to the server if the connection is lost using a blocking
-  reconnect function. See the 'mqtt_reconnect_nonblocking' example for how to
-  achieve the same result without blocking the main loop.
-
-  To install the ESP8266 board, (using Arduino 1.6.4+):
-  - Add the following 3rd party board manager under "File -> Preferences -> Additional Boards Manager URLs":
-       http://arduino.esp8266.com/stable/package_esp8266com_index.json
-  - Open the "Tools -> Board -> Board Manager" and click install for the ESP8266"
-  - Select your ESP8266 in "Tools -> Board"
-
-*/
-
 #include <ESP8266WiFi.h>
+#include <WiFiClient.h> 
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
 #include <PubSubClient.h>
-// Update these with values suitable for your network.
 
-const char* ssid = "2.4NET VIRTUA_62";
-const char* password = "1049917000";
-const char* mqtt_server = "37.187.106.16";
+const char *ssid = "VAN PF #184";
+const char *password = "policiafederal";
+String nssid,npass,mqtt_server;
 const int RED = 5;
 const int GREEN = 4;
 const int BLUE = 0;
-WiFiClient espClient;
-PubSubClient client(espClient);
 char msg[50];
 String colorList;
 int interval = 1000;
 int colorIndex = 0, totalColors = 5;
-void setup_wifi() {
+bool mqtt = false;
 
+ESP8266WebServer server(80);
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+
+String configPage ="<FORM action=\"/\" method=\"post\">"
+"<P>"
+"GENIUS<br>"
+"<INPUT type=\"text\" name=\"SSID\" >ssid<BR>"
+"<INPUT type=\"password\" name=\"SENHA\">senha<BR>"
+"<INPUT type=\"text\" name=\"MQTTSERVER\" >ip mqtt<BR>"
+"<INPUT type=\"submit\" value=\"Send\"> <INPUT type=\"reset\">"
+"</P>"
+"</FORM>";
+void handleRoot()
+{
+  if (server.hasArg("SSID")) {
+    Serial.println("TEM");
+    handleSubmit();
+  }
+  else {
+    Serial.println("NAOTEM");
+    server.send(200, "text/html", configPage);
+  }
+}
+void handleSubmit(){
+  nssid = server.arg("SSID");
+  npass = server.arg("SENHA");
+  mqtt_server = server.arg("MQTTSERVER");
+  setupWifiMode();
+}
+void setup() {
+  pinMode(RED, OUTPUT);
+  pinMode(GREEN, OUTPUT);
+  pinMode(BLUE, OUTPUT);
+	delay(1000);
+	Serial.begin(115200);
+	Serial.println();
+	Serial.print("Configurando...");
+	WiFi.softAP(ssid, password);
+	IPAddress myIP = WiFi.softAPIP();
+	Serial.print("Configuração de conexão em: ");
+	Serial.println(myIP);
+	server.on("/", handleRoot);
+	server.begin();
+	Serial.println("HTTP server started");
+}
+void setupWifiMode(){
+  server.close();
+  WiFi.disconnect();
   delay(10);
-  // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
+  Serial.println(nssid);
+  WiFi.begin(nssid.c_str(),npass.c_str());
+    while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-
   randomSeed(micros());
 
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  client.setServer(mqtt_server.c_str(), 1883);
+  client.setCallback(callback);
+  mqtt = true;
+  startGame();
 }
 void ledColor(int color) {
   if (color == 0) {
@@ -152,20 +177,13 @@ void reconnect() {
     }
   }
 }
-void setup() {
-  pinMode(RED, OUTPUT);
-  pinMode(GREEN, OUTPUT);
-  pinMode(BLUE, OUTPUT);
-  Serial.begin(115200);
-  setup_wifi();
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
-  startGame();
-}
-
 void loop() {
-  if (!client.connected()) {
-    reconnect();
+  if(!mqtt)
+	  server.handleClient();
+  else{
+    if (!client.connected()) {
+      reconnect();
+    }
+    client.loop();
   }
-  client.loop();
 }

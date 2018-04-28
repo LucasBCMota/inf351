@@ -38,7 +38,9 @@ void setup() {
 	server.begin();
 	Serial.println("HTTP server started");
 }
-
+void setupWifiMode(){
+  server.close();
+}
 void loop() {
 	server.handleClient();
 }
