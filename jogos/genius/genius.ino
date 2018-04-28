@@ -27,8 +27,8 @@
 #include <PubSubClient.h>
 // Update these with values suitable for your network.
 
-const char* ssid = "Sbornia...";
-const char* password = "lauravadia";
+const char* ssid = "2.4NET VIRTUA_62";
+const char* password = "1049917000";
 const char* mqtt_server = "37.187.106.16";
 const int RED = 5;
 const int GREEN = 4;
@@ -39,8 +39,7 @@ char msg[50];
 String colorList;
 int interval = 1000;
 int previousTime = 0;
-int rounds = 0, colorIndex = 0, totalColors = 4;
-bool showing = false;
+int rounds = 0, colorIndex = 0, totalColors = 5;
 void setup_wifi() {
 
   delay(10);
@@ -91,16 +90,25 @@ void startGame() {
   colorIndex = 0;
   startRound();
 }
+void showColors(){
+  int colorS = 0;
+  for(int i=0;i<colorList.length();i++){
+    colorS = colorList[i]-'0';
+    delay(interval);
+    ledColor(colorS);
+    delay(interval);
+    ledColor(0);
+  }
+  ledColor(0);
+}
 void startRound() {
   colorList = colorList+ random(1,totalColors);
+  Serial.println(colorList);
   colorIndex = 0;
-  showing = true;
-  for(int i=0;i<colorList.length();i++){
-    ledColor(colorList[i]);
-    delay(500);
-    ledColor(0);
-    delay(500);
-  }
+  char rounds[3];
+  sprintf(rounds,"%d",colorList.length());
+  client.publish("round",rounds);
+  showColors();
 }
 void callback(char* topic, byte* payload, unsigned int length) {
   char toString[10] = "";
@@ -110,16 +118,17 @@ void callback(char* topic, byte* payload, unsigned int length) {
   int num = atoi(toString);
   if (strcmp(topic, "cor") == 0) {
     int cor = colorList[colorIndex] - '0';
+    ledColor(num);
+    delay(500);
+    ledColor(0);
     if (num == cor) {
-      ledColor(cor);
-      delay(500);
-      ledColor(0);
       colorIndex++;
       if (colorIndex >= colorList.length())
         startRound();
     }
-    else
+    else{
       startGame();
+    }
   }
 }
 
@@ -156,10 +165,8 @@ void setup() {
 }
 
 void loop() {
-
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
-  startGame();
 }

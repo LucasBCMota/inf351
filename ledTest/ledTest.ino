@@ -4,8 +4,8 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-const char* ssid = "Sbornia...";
-const char* password = "lauravadia";
+const char* ssid = "2.4NET VIRTUA_62";
+const char* password = "1049917000";
 const char* mqtt_server = "37.187.106.16";
 const int RED = 5;
 const int GREEN = 4;
